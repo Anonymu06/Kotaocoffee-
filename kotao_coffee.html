@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kōtao Coffee Dakar — Café de Spécialité & All-Day Brunch</title>
+  
+  <!-- Polices Google Fonts : Cormorant Garamond & Jost -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Jost:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet.js CSS pour la carte interactive -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: '#FAF6F0',
+            sand: '#F2ECE1',
+            terracotta: {
+              DEFAULT: '#BE6C47',
+              dark: '#A05432',
+              light: '#DF8B66'
+            },
+            forest: {
+              DEFAULT: '#243B30',
+              deep: '#182921',
+              light: '#314E40'
+            },
+            ink: '#221B16'
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Jost"', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html, body {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+    @supports (min-height: 100svh) {
+      .min-h-screen { min-height: 100svh !important; }
+    }
+    /* Effet Ken Burns doux pour le Hero */
+    @keyframes kenBurnsSlow {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    .ken-burns {
+      animation: kenBurnsSlow 28s ease-in-out infinite alternate;
+    }
+
+    /* Rotation lente du tampon artisanal */
+    @keyframes rotateStamp {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spin-stamp {
+      animation: rotateStamp 24s linear infinite;
+    }
+
+    /* Style personnalisé pour les popups Leaflet */
+    .leaflet-popup-content-wrapper {
+      background: #FAF6F0 !important;
+      color: #221B16 !important;
+      border-radius: 1rem !important;
+      padding: 0.5rem !important;
+      border: 1px solid rgba(190, 108, 71, 0.25) !important;
+      box-shadow: 0 16px 32px rgba(36, 59, 48, 0.15) !important;
+      font-family: 'Jost', sans-serif !important;
+    }
+    .leaflet-popup-tip {
+      background: #FAF6F0 !important;
+    }
+
+    /* Punaise personnalisée Leaflet */
+    .custom-map-pin {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #BE6C47;
+      color: #FAF6F0;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0 4px 14px rgba(36, 59, 48, 0.35);
+      border: 3px solid #FAF6F0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .custom-map-pin:hover {
+      transform: rotate(-45deg) scale(1.15);
+      background: #243B30;
+    }
+    .custom-map-pin i {
+      transform: rotate(45deg);
+      font-size: 1.1rem;
+    }
+
+    /* Curseur de navigation fluide pour la carte de dégustation */
+    .nav-tab-active {
+      color: #FAF6F0 !important;
+      background-color: #243B30 !important;
+    }
+
+    /* Barre de défilement discrète et raffinée */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FAF6F0;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #D9CFC4;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #BE6C47;
+    }
+  </style>
+</head>
+
+<body class="bg-cream text-ink font-sans antialiased selection:bg-terracotta selection:text-white">
+
+  <header id="main-header" class="fixed top-0 left-0 w-full z-40 transition-all duration-500 py-5 px-6 lg:px-14">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- Logo Typographique -->
+      <a href="#" class="group flex items-baseline gap-2 text-decoration-none">
+        <span class="font-serif text-2xl lg:text-3xl font-semibold tracking-wider text-forest group-hover:text-terracotta transition-colors">
+          KŌTAO
+        </span>
+        <span class="font-serif text-sm italic tracking-widest text-terracotta font-normal uppercase">
+          Coffee
+        </span>
+        <span class="text-[10px] tracking-widest text-forest/60 font-sans uppercase hidden sm:inline ml-1 font-medium">
+          · Dakar
+        </span>
+      </a>
+
+      <!-- Menu Desktop -->
+      <nav class="hidden md:flex items-center space-x-8 font-medium text-sm tracking-wide text-forest">
+        <a href="#esprit" class="relative hover:text-terracotta transition-colors py-1 group">
+          L'Esprit
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-terracotta transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="#carte" class="relative hover:text-terracotta transition-colors py-1 group">
+          La Carte
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-terracotta transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="#galerie" class="relative hover:text-terracotta transition-colors py-1 group">
+          Galerie
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-terracotta transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="#adresses" class="relative hover:text-terracotta transition-colors py-1 group">
+          Nos Adresses
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-terracotta transition-all duration-300 group-hover:w-full"></span>
+        </a>
+        <a href="#avis" class="relative hover:text-terracotta transition-colors py-1 group">
+          Avis
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-terracotta transition-all duration-300 group-hover:w-full"></span>
+        </a>
+      </nav>
+
+      <!-- Bouton d'accès rapide aux adresses & Burger -->
+      <div class="flex items-center gap-4">
+        <a href="#adresses" class="hidden sm:inline-flex items-center gap-2 bg-terracotta hover:bg-terracotta-dark text-cream px-5 py-2.5 rounded-full text-xs font-medium uppercase tracking-wider shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+          <i class="fa-solid fa-location-dot text-[11px]"></i>
+          <span>Nos 2 Spots</span>
+        </a>
+
+        <!-- Hamburger Bouton Mobile -->
+        <button id="mobile-toggle" class="md:hidden text-forest p-2 focus:outline-none" aria-label="Ouvrir le menu">
+          <i id="burger-icon" class="fa-solid fa-bars-staggered text-xl"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Tiroir Mobile -->
+    <div id="mobile-menu" class="hidden md:hidden bg-cream/98 backdrop-blur-md border-b border-sand mt-4 py-6 px-6 rounded-2xl shadow-xl transition-all duration-300">
+      <div class="flex flex-col space-y-4 text-center font-serif text-lg tracking-wide text-forest">
+        <a href="#esprit" class="mobile-link py-2 hover:text-terracotta border-b border-sand/60">L'Esprit Kōtao</a>
+        <a href="#carte" class="mobile-link py-2 hover:text-terracotta border-b border-sand/60">La Carte de Saison</a>
+        <a href="#galerie" class="mobile-link py-2 hover:text-terracotta border-b border-sand/60">Atmosphère & Galerie</a>
+        <a href="#adresses" class="mobile-link py-2 hover:text-terracotta border-b border-sand/60">Nos 2 Spots à Dakar</a>
+        <a href="#avis" class="mobile-link py-2 hover:text-terracotta">Avis Clients</a>
+        <div class="pt-2">
+          <a href="#adresses" class="mobile-link inline-block w-full bg-forest text-cream py-3 rounded-full text-sm font-sans tracking-wider uppercase font-medium">
+            Trouver un Kōtao
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16 px-6">
+    <!-- Image d'arrière-plan avec Ken Burns -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+      <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=2000&q=85" 
+           alt="Ambiance Kōtao Coffee Shop" 
+           class="w-full h-full object-cover ken-burns brightness-[0.88] saturate-[0.95]"
+           onerror="this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1800&q=80'">
+      <!-- Overlay teinté vert végétal et lin -->
+      <div class="absolute inset-0 bg-gradient-to-t from-cream via-forest/40 to-forest/60 mix-blend-multiply"></div>
+      <div class="absolute inset-0 bg-forest/20"></div>
+    </div>
+
+    <!-- Contenu Central Hero -->
+    <div class="relative z-10 max-w-4xl mx-auto text-center text-cream flex flex-col items-center">
+      
+      <!-- Badge Avis & Réputation -->
+      <div class="inline-flex items-center gap-2.5 bg-cream/90 backdrop-blur-md text-forest px-4 py-1.5 rounded-full text-xs tracking-wider uppercase font-medium mb-6 shadow-lg border border-white/40">
+        <span class="flex text-amber-500">
+          <i class="fa-solid fa-star text-[11px]"></i>
+          <i class="fa-solid fa-star text-[11px]"></i>
+          <i class="fa-solid fa-star text-[11px]"></i>
+          <i class="fa-solid fa-star text-[11px]"></i>
+          <i class="fa-solid fa-star-half-stroke text-[11px]"></i>
+        </span>
+        <span class="font-semibold text-terracotta">4.5 / 5</span>
+        <span class="text-ink/60">·</span>
+        <span>Avis vérifiés à Dakar</span>
+      </div>
+
+      <!-- Titre Noble -->
+      <h1 class="font-serif text-4xl sm:text-6xl md:text-7xl font-light leading-[1.1] tracking-tight mb-6">
+        L'art du <span class="italic font-normal text-terracotta-light">café de spécialité</span> & du all-day brunch à Dakar.
+      </h1>
+
+      <!-- Sous-titre éditorial -->
+      <p class="font-sans text-base sm:text-lg md:text-xl text-cream/90 max-w-2xl font-light leading-relaxed mb-10">
+        Inspiré par la quiétude de l’île de Koh Tao et bercé par les alizés de la presqu’île du Cap-Vert. Une parenthèse végétale entre patio ombragé et torréfaction d'exception.
+      </p>
+
+      <!-- Double CTA -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+        <a href="#carte" class="w-full sm:w-auto bg-terracotta hover:bg-terracotta-dark text-cream font-medium px-8 py-4 rounded-full tracking-wider uppercase text-xs sm:text-sm shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+          Explorer la Carte de Saison
+        </a>
+        <a href="#adresses" class="w-full sm:w-auto bg-cream/90 hover:bg-cream text-forest font-medium px-8 py-4 rounded-full tracking-wider uppercase text-xs sm:text-sm backdrop-blur-sm border border-white/60 transition-all duration-300 hover:-translate-y-1">
+          Découvrir nos 2 Adresses
+        </a>
+      </div>
+
+      <!-- Badge Horaires & All-Day -->
+      <div class="mt-12 flex items-center gap-3 text-xs tracking-widest uppercase text-cream/80 font-light">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span>Ouvert 7j/7 · De 07h30 à 22h00 sans interruption</span>
+      </div>
+
+    </div>
+
+    <!-- Indicateur de scroll -->
+    <a href="#esprit" class="absolute bottom-6 left-1/2 -translate-x-1/2 text-cream/70 hover:text-cream flex flex-col items-center gap-2 transition-colors">
+      <span class="text-[10px] tracking-widest uppercase font-medium">Découvrir</span>
+      <i class="fa-solid fa-arrow-down-long animate-bounce text-sm"></i>
+    </a>
+  </section>
+
+  <section id="esprit" class="py-24 px-6 lg:px-14 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      
+      <!-- Colonne Visuelle avec Tampon Artisanal -->
+      <div class="lg:col-span-5 relative">
+        <div class="relative z-10 rounded-3xl overflow-hidden shadow-2xl border-8 border-sand">
+          <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80" 
+               alt="Terrasse et café Kōtao" 
+               class="w-full h-[480px] object-cover hover:scale-105 transition-transform duration-700">
+        </div>
+
+        <!-- Deuxième photo en superposition subtile -->
+        <div class="hidden sm:block absolute -bottom-10 -right-8 z-20 w-48 h-48 rounded-2xl overflow-hidden shadow-2xl border-4 border-cream">
+          <img src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80" 
+               alt="Tasse de café de spécialité" 
+               class="w-full h-full object-cover">
+        </div>
+
+        <!-- Tampon Vintage Sceau Kōtao -->
+        <div class="absolute -top-8 -left-6 z-20 w-28 h-28 bg-forest text-cream rounded-full flex items-center justify-center p-3 shadow-xl border-2 border-sand">
+          <svg class="w-full h-full spin-stamp" viewBox="0 0 100 100">
+            <path id="circlePath" fill="none" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"/>
+            <text font-size="8.8" font-family="'Jost', sans-serif" letter-spacing="2.8" fill="#FAF6F0" font-weight="600">
+              <textPath xlink:href="#circlePath">
+                · KŌTAO DAKAR · SINCE 2021 ·
+              </textPath>
+            </text>
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center text-terracotta">
+            <i class="fa-solid fa-mug-hot text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Colonne Contenu Éditorial -->
+      <div class="lg:col-span-7 flex flex-col justify-center">
+        <span class="text-xs uppercase font-sans tracking-widest text-terracotta font-semibold mb-3">
+          L'Esprit du Lieu
+        </span>
+        
+        <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-forest leading-tight mb-6">
+          Né d'un rêve d'évasion insulaire, <br class="hidden sm:inline"/>enraciné sous le soleil de la Teranga.
+        </h2>
+
+        <p class="font-sans text-ink/80 text-base sm:text-lg leading-relaxed mb-6 font-light">
+          Le nom <strong class="font-medium text-forest">Kōtao Coffee</strong> rend hommage aux escapades thaïlandaises de ses fondateurs sur l'île préservée de Koh Tao. De cet esprit d'aventure est née la volonté de bâtir à Dakar un tiers-lieu d'inspiration internationale : un repaire végétal où le café n'est plus une simple habitude, mais une expérience sensorielle et contemplative.
+        </p>
+
+        <!-- Citation éditoriale -->
+        <blockquote class="border-l-2 border-terracotta pl-6 py-2 my-4 italic font-serif text-xl sm:text-2xl text-forest/90">
+          « Un refuge chaleureux où chaque tasse raconte une origine, et chaque plat célèbre la générosité du fait maison. »
+        </blockquote>
+
+        <p class="font-sans text-ink/80 text-base leading-relaxed mb-8 font-light">
+          Que ce soit au cœur du patio luxuriant des Almadies ou dans le calme feutré du Plateau pour vos sessions de travail, nous célébrons la fraîcheur absolue des produits sénégalais alliée aux méthodes de torréfaction de terroirs éthiopiens et kényans.
+        </p>
+
+        <!-- 3 Badges d'engagement -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-sand">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-sand flex items-center justify-center text-terracotta shrink-0">
+              <i class="fa-solid fa-clock text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-forest">7j / 7</h4>
+              <p class="text-xs text-ink/70">07h30 — 22h00</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-sand flex items-center justify-center text-terracotta shrink-0">
+              <i class="fa-solid fa-seedling text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-forest">100% Frais</h4>
+              <p class="text-xs text-ink/70">Cuisine faite maison</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-sand flex items-center justify-center text-terracotta shrink-0">
+              <i class="fa-solid fa-map-pin text-sm"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-forest">2 Quartiers</h4>
+              <p class="text-xs text-ink/70">Almadies & Plateau</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <section id="carte" class="py-24 bg-sand/60 px-6 lg:px-14 border-y border-sand">
+    <div class="max-w-6xl mx-auto">
+      
+      <!-- En-tête de section -->
+      <div class="text-center max-w-2xl mx-auto mb-14">
+        <span class="text-xs uppercase font-sans tracking-widest text-terracotta font-semibold">
+          Menu Dégustation & Découverte
+        </span>
+        <h2 class="font-serif text-3xl sm:text-5xl font-normal text-forest mt-2 mb-4">
+          La Carte de Saison
+        </h2>
+        <p class="font-sans text-ink/70 text-sm sm:text-base font-light">
+          Tous nos plats sont cuisinés à la commande à partir d'ingrédients frais du terroir sénégalais et d'importations nobles soigneusement sélectionnées.
+        </p>
+      </div>
+
+      <!-- Onglets Interactifs -->
+      <div class="flex justify-center mb-12">
+        <div class="inline-flex flex-wrap justify-center p-1.5 bg-cream rounded-full border border-sand shadow-inner gap-1">
+          <button onclick="switchTab('brunch', this)" class="menu-tab px-5 sm:px-7 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 nav-tab-active">
+            All-Day Brunch
+          </button>
+          <button onclick="switchTab('plats', this)" class="menu-tab px-5 sm:px-7 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 text-ink/70 hover:text-forest">
+            Plats & Bowls
+          </button>
+          <button onclick="switchTab('patisserie', this)" class="menu-tab px-5 sm:px-7 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 text-ink/70 hover:text-forest">
+            Pâtisseries Maison
+          </button>
+          <button onclick="switchTab('cafe', this)" class="menu-tab px-5 sm:px-7 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 text-ink/70 hover:text-forest">
+            Café de Terroir & Boissons
+          </button>
+        </div>
+      </div>
+
+      <!-- Conteneurs de plats -->
+      <div id="tab-content" class="min-h-[460px]">
+
+        <!-- CATEGORIE 1 : ALL-DAY BRUNCH -->
+        <div id="content-brunch" class="grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-500">
+          
+          <!-- Plat 1 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Avocado Toast au Dukkah Égyptien</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">6 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Pain au levain toasté au beurre bio, écrasé d'avocat au citron vert, dukkah d'épices torréfiées fait maison, crème fouettée de feta, œuf bio poché et micropousses.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-terracotta/10 text-terracotta px-2.5 py-1 rounded-full">
+                ★ Incontournable
+              </span>
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
+                Végétarien
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 2 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Truffle Scramble Brioche</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">7 000 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Brioche dodue dorée au beurre, œufs brouillés ultra-crémeux infusés à l'huile de truffe blanche d'Alba, copeaux de parmesan affiné 24 mois et ciboulette fraîche.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-forest/10 text-forest px-2.5 py-1 rounded-full">
+                Coup de Cœur
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 3 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Shakshuka Solaire & Pain Zaatar</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">6 000 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Mijoté minute de tomates confites, poivrons rouges rôtis, cumin et harissa douce, deux œufs pochés coulants, labneh libanais maison et pain chaud au zaatar.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
+                Végétarien
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 4 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Pancakes Ricotta & Myrtilles</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">5 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Trois pancakes ultra-moelleux battus à la ricotta fraîche, compotée tiède de myrtilles sauvages, véritable sirop d'érable du Canada et quenelle de mascarpone vanillée.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-terracotta/10 text-terracotta px-2.5 py-1 rounded-full">
+                Sucré-Salé
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CATEGORIE 2 : PLATS & BOWLS -->
+        <div id="content-plats" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-500">
+          
+          <!-- Plat 1 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Poké Bowl Thon Rouge de l'Atlantique</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">8 000 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Pêche locale du jour débarquée à Soumbédioune, riz vinaigré koshihikari, mangue fraîche du Sénégal, edamames, avocat crémeux, sésame grillé et vinaigrette ponzu-gingembre maison.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-terracotta/10 text-terracotta px-2.5 py-1 rounded-full">
+                ★ Signature Dakar
+              </span>
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-blue-100 text-blue-900 px-2.5 py-1 rounded-full">
+                Pêche Responsable
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 2 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Pad Thaï Royal aux Crevettes Tigrées</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">8 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Clin d'œil direct aux saveurs de Koh Tao : nouilles de riz sautées au wok minute, crevettes sauvages de Casamance, tamarin, pousses de soja, tofu et cacahuètes concassées.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-forest/10 text-forest px-2.5 py-1 rounded-full">
+                Héritage Thaï
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 3 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Green Goddess Quinoa Bowl</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">6 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Quinoa rouge aux herbes fraîches, brocolis rôtis au sésame blanc, patates douces rôties au paprika fumé, pois chiches croustillants et sauce onctueuse tahini-spiruline.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
+                100% Vegan
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 4 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Tartine Saumon Fumé & Ricotta</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">7 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Tranche généreuse de pain de meule grillé, crème de ricotta montée au citron vert, saumon fumé de qualité supérieure, câpres frites et pickles d'oignons rouges maison.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-terracotta/10 text-terracotta px-2.5 py-1 rounded-full">
+                Fraîcheur
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CATEGORIE 3 : PÂTISSERIES MAISON -->
+        <div id="content-patisserie" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-500">
+          
+          <!-- Plat 1 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Le Fameux Banana Bread Kōtao</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">3 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                La signature absolue de la maison : servi légèrement toasté au beurre salé, cœur ultra-fondant, pépites de chocolat noir Guanaja et caramel maison au beurre salé coulant.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-terracotta text-cream px-3 py-1 rounded-full">
+                ★ Star de la Maison
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 2 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Carrot Cake Fondant & Noix de Pécan</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">3 800 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Recette familiale aux carottes locales épicées à la cannelle de Ceylan, noix de pécan caramélisées et glaçage onctueux au cream cheese zesté à l'orange douce.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-forest/10 text-forest px-2.5 py-1 rounded-full">
+                Coup de Cœur
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 3 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Cookie Mi-Cuit Fleur de Sel & Valrhona</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">2 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Cuit minute plusieurs fois par jour : cœur fondant, gros morceaux de chocolat noir 70%, éclats de noisettes du Piémont et cristaux de sel du Lac Rose.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full">
+                Gourmand
+              </span>
+            </div>
+          </div>
+
+          <!-- Plat 4 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Babka Tressée Chocolat & Praliné</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">3 200 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Brioche feuilletée au levain naturel, tressée à la main et généreusement garnie de ganache chocolat noir intense et praliné amande-noisette maison.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-sand text-ink px-2.5 py-1 rounded-full">
+                Artisanal
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CATEGORIE 4 : CAFÉ DE SPÉCIALITÉ & FRAIS -->
+        <div id="content-cafe" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-500">
+          
+          <!-- Boisson 1 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Filtre V60 Slow Coffee — Éthiopie Yirgacheffe</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">3 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Extraction douce manuelle à la commande. Profil aromatique d'une grande délicatesse aux notes florales de jasmin, bergamote et pêche blanche. Servi en carafe.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-terracotta/10 text-terracotta px-2.5 py-1 rounded-full">
+                Pure Origine
+              </span>
+            </div>
+          </div>
+
+          <!-- Boisson 2 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Matcha Latte Cérémonial d'Uji</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">3 800 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Poudre de thé vert matcha biologique de première récolte fouettée au chasen traditionnel, servie chaud ou glacé avec un lait d'avoine bio velouté.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">
+                Bio & Antioxydant
+              </span>
+            </div>
+          </div>
+
+          <!-- Boisson 3 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Lassi Mangue Fraîche de Casamance</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">3 200 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Mangues du terroir sénégalais mixées à maturité avec yaourt fermier onctueux, soupçon de cardamome verte torréfiée et graines de chia croquantes.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full">
+                Fruits Locaux
+              </span>
+            </div>
+          </div>
+
+          <!-- Boisson 4 -->
+          <div class="bg-cream p-7 rounded-2xl border border-sand/90 hover:border-terracotta/40 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+            <div>
+              <div class="flex items-baseline justify-between gap-4 mb-2">
+                <h3 class="font-serif text-2xl text-forest font-medium">Cold Brew Infusé 18h & Tonic Botanique</h3>
+                <span class="font-serif text-xl font-semibold text-terracotta shrink-0">3 500 FCFA</span>
+              </div>
+              <p class="text-xs text-ink/75 font-light leading-relaxed mb-4">
+                Extraction lente à l'eau froide durant 18h d'un cru du Kenya Nyeri, tonic artisanal pétillant, rondelle d'orange séchée et brin de romarin frais.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] tracking-wider uppercase font-semibold bg-forest/10 text-forest px-2.5 py-1 rounded-full">
+                Ultra-Rafraîchissant
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Note de bas de menu -->
+      <div class="text-center mt-12 pt-8 border-t border-sand text-xs text-ink/60 font-light">
+        <p>Les laits végétaux (avoine bio, amande, coco) sont disponibles sans surcoût pour l'ensemble de nos boissons.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="galerie" class="py-24 px-6 lg:px-14 max-w-7xl mx-auto">
+    
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-14">
+      <div>
+        <span class="text-xs uppercase font-sans tracking-widest text-terracotta font-semibold">
+          Atmosphère Visuelle
+        </span>
+        <h2 class="font-serif text-3xl sm:text-5xl font-normal text-forest mt-2">
+          La Vie au Rythme de Kōtao
+        </h2>
+      </div>
+      <p class="font-sans text-ink/70 text-sm max-w-md font-light mt-4 md:mt-0">
+        Une immersion entre patio ombragé, barista craft et moments suspendus au cœur de la capitale sénégalaise.
+      </p>
+    </div>
+
+    <!-- Grille Asymétrique 5 Photos -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+      
+      <!-- Photo 1 (Grande verticale à gauche) -->
+      <div class="md:col-span-5 relative group overflow-hidden rounded-3xl h-[460px] md:h-[600px] cursor-pointer shadow-md"
+           onclick="openLightbox('https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=1400&q=85', 'Ambiance Patio & All-Day Brunch')">
+        <img src="https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=900&q=80" 
+             alt="Patio Kōtao Coffee Dakar" 
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+        <div class="absolute inset-0 bg-forest/20 group-hover:bg-forest/40 transition-colors duration-300 flex items-end p-8">
+          <div class="text-cream transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+            <span class="text-xs uppercase tracking-wider font-light text-sand">Almadies</span>
+            <h4 class="font-serif text-2xl font-normal">Le Patio Végétal</h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Colonne Droite (4 Photos en grille) -->
+      <div class="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
+        
+        <!-- Photo 2 -->
+        <div class="relative group overflow-hidden rounded-3xl h-[285px] cursor-pointer shadow-md"
+             onclick="openLightbox('https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=85', 'Extraction Barista de Spécialité')">
+          <img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=600&q=80" 
+               alt="Café de spécialité extraction espresso" 
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+          <div class="absolute inset-0 bg-forest/20 group-hover:bg-forest/40 transition-colors duration-300 flex items-end p-6">
+            <div class="text-cream">
+              <span class="text-xs uppercase tracking-wider font-light text-sand">Savoir-Faire</span>
+              <h4 class="font-serif text-xl font-normal">Extraction Barista</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo 3 -->
+        <div class="relative group overflow-hidden rounded-3xl h-[285px] cursor-pointer shadow-md"
+             onclick="openLightbox('https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=1200&q=85', 'Toast Avocat Dukkah & Brunch Maison')">
+          <img src="https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=600&q=80" 
+               alt="Avocado toast gourmet" 
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+          <div class="absolute inset-0 bg-forest/20 group-hover:bg-forest/40 transition-colors duration-300 flex items-end p-6">
+            <div class="text-cream">
+              <span class="text-xs uppercase tracking-wider font-light text-sand">Cuisine Fraîche</span>
+              <h4 class="font-serif text-xl font-normal">Avocado & Dukkah</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo 4 -->
+        <div class="relative group overflow-hidden rounded-3xl h-[285px] cursor-pointer shadow-md"
+             onclick="openLightbox('https://images.unsplash.com/photo-1607958996333-41aef7caefaa?auto=format&fit=crop&w=1200&q=85', 'Le Fameux Banana Bread Kōtao')">
+          <img src="https://images.unsplash.com/photo-1607958996333-41aef7caefaa?auto=format&fit=crop&w=600&q=80" 
+               alt="Banana Bread tiède et caramel" 
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+          <div class="absolute inset-0 bg-forest/20 group-hover:bg-forest/40 transition-colors duration-300 flex items-end p-6">
+            <div class="text-cream">
+              <span class="text-xs uppercase tracking-wider font-light text-sand">Pâtisserie</span>
+              <h4 class="font-serif text-xl font-normal">Le Banana Bread</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo 5 -->
+        <div class="relative group overflow-hidden rounded-3xl h-[285px] cursor-pointer shadow-md"
+             onclick="openLightbox('https://images.unsplash.com/photo-1534040385115-33dcb3acba5b?auto=format&fit=crop&w=1200&q=85', 'Matcha Latte & Lait d\'Avoine')">
+          <img src="https://images.unsplash.com/photo-1534040385115-33dcb3acba5b?auto=format&fit=crop&w=600&q=80" 
+               alt="Matcha Latte vert vif" 
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+          <div class="absolute inset-0 bg-forest/20 group-hover:bg-forest/40 transition-colors duration-300 flex items-end p-6">
+            <div class="text-cream">
+              <span class="text-xs uppercase tracking-wider font-light text-sand">Rituel</span>
+              <h4 class="font-serif text-xl font-normal">Matcha d'Uji</h4>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Modal Lightbox Plein Écran -->
+  <div id="lightbox-modal" class="fixed inset-0 z-50 bg-forest-deep/95 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <button onclick="closeLightbox()" class="absolute top-6 right-6 text-cream/80 hover:text-white text-3xl focus:outline-none transition-colors" aria-label="Fermer la vue">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="max-w-4xl max-h-[90vh] flex flex-col items-center">
+      <img id="lightbox-image" src="" alt="Aperçu Kōtao" class="max-h-[75vh] w-auto rounded-2xl shadow-2xl object-contain border border-white/10">
+      <p id="lightbox-caption" class="text-cream font-serif text-xl mt-4 italic tracking-wide text-center"></p>
+    </div>
+  </div>
+
+  <section id="avis" class="py-24 bg-forest text-cream px-6 lg:px-14">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="text-center max-w-xl mx-auto mb-16">
+        <span class="text-xs uppercase font-sans tracking-widest text-terracotta-light font-semibold">
+          La Voix des Fidèles
+        </span>
+        <h2 class="font-serif text-3xl sm:text-5xl font-normal text-cream mt-2">
+          Chroniques & Paroles d'Habitués
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Témoignage 1 -->
+        <div class="bg-forest-light/60 p-8 rounded-3xl border border-white/10 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300">
+          <div>
+            <div class="flex text-amber-400 mb-6 text-xs gap-1">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+            <p class="font-serif italic text-lg text-cream/90 leading-relaxed mb-6">
+              « Le meilleur Flat White de Dakar, sans le moindre compromis. Le patio des Almadies est un havre de paix tropical où je commence la plupart de mes journées. Le Banana Bread tiède au caramel est une dépendance assumée. »
+            </p>
+          </div>
+          <div class="border-t border-white/10 pt-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-terracotta/30 text-terracotta-light flex items-center justify-center font-serif text-base font-semibold">
+              AD
+            </div>
+            <div>
+              <h4 class="font-medium text-sm text-cream">Aïda Diop</h4>
+              <p class="text-xs text-cream/60">Journaliste & Critique Culinaire · Dakar</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Témoignage 2 -->
+        <div class="bg-forest-light/60 p-8 rounded-3xl border border-white/10 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300">
+          <div>
+            <div class="flex text-amber-400 mb-6 text-xs gap-1">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+            <p class="font-serif italic text-lg text-cream/90 leading-relaxed mb-6">
+              « L'adresse du Plateau au 26 rue Jules Ferry est une merveille pour les télétravailleurs et amoureux de beau design. Connexion rapide, atmosphère calme, et les œufs brouillés à la truffe sont un chef-d'œuvre. »
+            </p>
+          </div>
+          <div class="border-t border-white/10 pt-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-terracotta/30 text-terracotta-light flex items-center justify-center font-serif text-base font-semibold">
+              MS
+            </div>
+            <div>
+              <h4 class="font-medium text-sm text-cream">Marc De Smedt</h4>
+              <p class="text-xs text-cream/60">Architecte & Nomade Digital · Plateau</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Témoignage 3 -->
+        <div class="bg-forest-light/60 p-8 rounded-3xl border border-white/10 flex flex-col justify-between hover:-translate-y-1 transition-transform duration-300">
+          <div>
+            <div class="flex text-amber-400 mb-6 text-xs gap-1">
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+              <i class="fa-solid fa-star"></i>
+            </div>
+            <p class="font-serif italic text-lg text-cream/90 leading-relaxed mb-6">
+              « Le Poké Bowl au thon frais débarqué le matin même et mangue locale est juste sensationnel. On sent toute l'attention portée aux produits frais et le service est d'une bienveillance typiquement dakaroise. »
+            </p>
+          </div>
+          <div class="border-t border-white/10 pt-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-terracotta/30 text-terracotta-light flex items-center justify-center font-serif text-base font-semibold">
+              SN
+            </div>
+            <div>
+              <h4 class="font-medium text-sm text-cream">Seynabou Ndiaye</h4>
+              <p class="text-xs text-cream/60">Habituée du brunch dominical</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <section id="adresses" class="py-24 px-6 lg:px-14 max-w-7xl mx-auto">
+    
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <span class="text-xs uppercase font-sans tracking-widest text-terracotta font-semibold">
+        Implantations à Dakar
+      </span>
+      <h2 class="font-serif text-3xl sm:text-5xl font-normal text-forest mt-2 mb-4">
+        Deux Espaces, Une Même Exigence
+      </h2>
+      <p class="font-sans text-ink/70 text-sm sm:text-base font-light">
+        Choisissez l'effervescence arborée des Almadies ou la quiétude raffinée du cœur de ville au Plateau.
+      </p>
+    </div>
+
+    <!-- Grille des 2 Fiches Établissements -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-14">
+      
+      <!-- Fiche 1 : ALMADIES -->
+      <div class="bg-cream rounded-3xl p-8 border border-sand shadow-lg flex flex-col justify-between hover:border-terracotta/50 transition-all duration-300">
+        <div>
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <span class="text-xs tracking-widest uppercase font-semibold text-terracotta">Spot #01</span>
+              <h3 class="font-serif text-3xl font-medium text-forest">Kōtao Almadies</h3>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Ouvert 7j/7
+            </span>
+          </div>
+
+          <p class="text-xs text-ink/75 font-light mb-6 leading-relaxed">
+            Patio tropical sous les arbres, jardin calme et salon intérieur climatisé propice à la détente et aux déjeuners au grand air.
+          </p>
+
+          <div class="space-y-3.5 mb-8 text-xs text-ink/80">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-location-dot text-terracotta mt-1 text-sm shrink-0"></i>
+              <span>Route du King Fahd (juste avant l'American Food Store), Les Almadies, Dakar</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-clock text-terracotta text-sm shrink-0"></i>
+              <span>Du lundi au dimanche : <strong>07h30 — 22h00</strong></span>
+            </div>
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-phone text-terracotta text-sm shrink-0"></i>
+              <a href="tel:+221777187652" class="hover:text-terracotta font-medium transition-colors">
+                +221 77 718 76 52
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'Action Directs -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-sand">
+          <!-- WhatsApp direct -->
+          <a href="https://wa.me/221777187652?text=Bonjour%20K%C5%8Dtao%20Coffee%20Almadies%2C%20je%20souhaiterais%20avoir%20des%20renseignements%20sur%20votre%20carte." 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             class="flex-1 inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white py-3 px-4 rounded-xl text-xs font-medium uppercase tracking-wider transition-colors shadow-sm">
+            <i class="fa-brands fa-whatsapp text-base"></i>
+            <span>WhatsApp Direct</span>
+          </a>
+          <!-- Bouton Vol Carte -->
+          <button onclick="flyToSpot(14.7438, -17.5165, 'Kōtao Almadies')" 
+                  class="inline-flex items-center justify-center gap-2 bg-sand hover:bg-forest hover:text-cream text-forest py-3 px-5 rounded-xl text-xs font-medium uppercase tracking-wider transition-all">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span>Voir sur le plan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Fiche 2 : PLATEAU -->
+      <div class="bg-cream rounded-3xl p-8 border border-sand shadow-lg flex flex-col justify-between hover:border-terracotta/50 transition-all duration-300">
+        <div>
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <span class="text-xs tracking-widest uppercase font-semibold text-terracotta">Spot #02</span>
+              <h3 class="font-serif text-3xl font-medium text-forest">Kōtao Plateau</h3>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Ouvert 7j/7
+            </span>
+          </div>
+
+          <p class="text-xs text-ink/75 font-light mb-6 leading-relaxed">
+            Écrin contemporain et chaleureux au cœur du centre d'affaires dakarois. Idéal pour rendez-vous professionnels, pause café d'exception ou coworking feutré.
+          </p>
+
+          <div class="space-y-3.5 mb-8 text-xs text-ink/80">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-location-dot text-terracotta mt-1 text-sm shrink-0"></i>
+              <span>26, rue Jules Ferry, Centre-ville Plateau, Dakar</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-clock text-terracotta text-sm shrink-0"></i>
+              <span>Du lundi au dimanche : <strong>07h30 — 22h00</strong></span>
+            </div>
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-phone text-terracotta text-sm shrink-0"></i>
+              <a href="tel:+221786307097" class="hover:text-terracotta font-medium transition-colors">
+                +221 78 630 70 97
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'Action Directs -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-sand">
+          <!-- WhatsApp direct -->
+          <a href="https://wa.me/221786307097?text=Bonjour%20K%C5%8Dtao%20Coffee%20Plateau%2C%20je%20souhaiterais%20avoir%20des%20renseignements%20sur%20votre%20carte." 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             class="flex-1 inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white py-3 px-4 rounded-xl text-xs font-medium uppercase tracking-wider transition-colors shadow-sm">
+            <i class="fa-brands fa-whatsapp text-base"></i>
+            <span>WhatsApp Direct</span>
+          </a>
+          <!-- Bouton Vol Carte -->
+          <button onclick="flyToSpot(14.6685, -17.4338, 'Kōtao Plateau')" 
+                  class="inline-flex items-center justify-center gap-2 bg-sand hover:bg-forest hover:text-cream text-forest py-3 px-5 rounded-xl text-xs font-medium uppercase tracking-wider transition-all">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span>Voir sur le plan</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Conteneur Carte Interactive Leaflet -->
+    <div class="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-sand bg-cream">
+      <div id="kotao-map" class="w-full h-[450px] sm:h-[500px] z-10"></div>
+      
+      <!-- Légende flottante sur la carte -->
+      <div class="absolute bottom-4 left-4 z-20 bg-cream/95 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-lg border border-sand text-xs flex items-center gap-4 hidden sm:flex">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-terracotta"></span>
+          <span class="font-medium text-forest">Spots Kōtao</span>
+        </div>
+        <span class="text-ink/40">|</span>
+        <span class="text-ink/70">Cliquez sur un marqueur pour les détails</span>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="py-16 bg-cream border-t border-sand overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 lg:px-14 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <span class="text-xs uppercase font-sans tracking-widest text-terracotta font-semibold">Instantanés</span>
+        <h3 class="font-serif text-2xl sm:text-3xl text-forest">Suivez notre quotidien à Dakar</h3>
+      </div>
+      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-forest hover:text-terracotta font-medium text-sm transition-colors group">
+        <i class="fa-brands fa-instagram text-lg text-terracotta group-hover:scale-110 transition-transform"></i>
+        <span>@kotaocoffee</span>
+        <i class="fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
+      </a>
+    </div>
+
+    <!-- Grille Instagram 6 vignettes -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 px-6 lg:px-14">
+      <div class="relative group overflow-hidden rounded-2xl aspect-square shadow-sm cursor-pointer">
+        <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=400&q=80" alt="Latte art" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+        <div class="absolute inset-0 bg-forest/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+          <i class="fa-brands fa-instagram text-2xl"></i>
+        </div>
+      </div>
+      <div class="relative group overflow-hidden rounded-2xl aspect-square shadow-sm cursor-pointer">
+        <img src="https://images.unsplash.com/photo-1509785307050-d4066910ec1e?auto=format&fit=crop&w=400&q=80" alt="Pastry" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+        <div class="absolute inset-0 bg-forest/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+          <i class="fa-brands fa-instagram text-2xl"></i>
+        </div>
+      </div>
+      <div class="relative group overflow-hidden rounded-2xl aspect-square shadow-sm cursor-pointer">
+        <img src="https://images.unsplash.com/photo-1497636577773-f1231844b336?auto=format&fit=crop&w=400&q=80" alt="Coffee beans" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+        <div class="absolute inset-0 bg-forest/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+          <i class="fa-brands fa-instagram text-2xl"></i>
+        </div>
+      </div>
+      <div class="relative group overflow-hidden rounded-2xl aspect-square shadow-sm cursor-pointer">
+        <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80" alt="Brunch bowl" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+        <div class="absolute inset-0 bg-forest/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+          <i class="fa-brands fa-instagram text-2xl"></i>
+        </div>
+      </div>
+      <div class="relative group overflow-hidden rounded-2xl aspect-square shadow-sm cursor-pointer">
+        <img src="https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?auto=format&fit=crop&w=400&q=80" alt="Cafe community" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+        <div class="absolute inset-0 bg-forest/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+          <i class="fa-brands fa-instagram text-2xl"></i>
+        </div>
+      </div>
+      <div class="relative group overflow-hidden rounded-2xl aspect-square shadow-sm cursor-pointer">
+        <img src="https://images.unsplash.com/photo-1512568400610-62da28bc8a13?auto=format&fit=crop&w=400&q=80" alt="Iced drink" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+        <div class="absolute inset-0 bg-forest/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+          <i class="fa-brands fa-instagram text-2xl"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-forest-deep text-sand pt-16 pb-12 px-6 lg:px-14 border-t border-forest">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-10 pb-14 border-b border-white/10">
+        
+        <!-- Marque & Description -->
+        <div class="md:col-span-5">
+          <a href="#" class="inline-block mb-4">
+            <span class="font-serif text-3xl font-semibold tracking-wider text-cream">KŌTAO</span>
+            <span class="font-serif text-sm italic tracking-widest text-terracotta-light uppercase ml-1">Coffee</span>
+          </a>
+          <p class="text-xs text-sand/70 font-light leading-relaxed max-w-sm mb-6">
+            Maison de café de spécialité et all-day brunch artisanal à Dakar. Un sanctuaire d'hospitalité inspiré par la nature insulaire et magnifié par la chaleur de la Teranga.
+          </p>
+          <div class="flex items-center space-x-3 text-cream/70">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-forest-light flex items-center justify-center hover:bg-terracotta hover:text-white transition-colors" aria-label="Instagram">
+              <i class="fa-brands fa-instagram text-sm"></i>
+            </a>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-forest-light flex items-center justify-center hover:bg-terracotta hover:text-white transition-colors" aria-label="Facebook">
+              <i class="fa-brands fa-facebook-f text-sm"></i>
+            </a>
+            <a href="https://wa.me/221777187652" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-full bg-forest-light flex items-center justify-center hover:bg-terracotta hover:text-white transition-colors" aria-label="WhatsApp">
+              <i class="fa-brands fa-whatsapp text-sm"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Navigation Rapide -->
+        <div class="md:col-span-3">
+          <h5 class="text-xs uppercase tracking-widest font-semibold text-terracotta-light mb-4 font-sans">
+            Navigation
+          </h5>
+          <ul class="space-y-2 text-xs text-sand/80 font-light">
+            <li><a href="#esprit" class="hover:text-cream transition-colors">L'Histoire de Kōtao</a></li>
+            <li><a href="#carte" class="hover:text-cream transition-colors">Carte All-Day Brunch</a></li>
+            <li><a href="#galerie" class="hover:text-cream transition-colors">Atmosphère & Lieux</a></li>
+            <li><a href="#adresses" class="hover:text-cream transition-colors">Kōtao Almadies (King Fahd)</a></li>
+            <li><a href="#adresses" class="hover:text-cream transition-colors">Kōtao Plateau (Rue Jules Ferry)</a></li>
+          </ul>
+        </div>
+
+        <!-- Horaires & Contact -->
+        <div class="md:col-span-4">
+          <h5 class="text-xs uppercase tracking-widest font-semibold text-terracotta-light mb-4 font-sans">
+            Horaires d'Ouverture
+          </h5>
+          <p class="text-xs text-sand/80 leading-relaxed mb-3">
+            <strong>7 jours sur 7</strong> sans interruption :<br>
+            De <span class="text-cream font-medium">07h30</span> à <span class="text-cream font-medium">22h00</span>
+          </p>
+          <div class="pt-3 border-t border-white/10 text-xs text-sand/70 space-y-1">
+            <p>Almadies : <a href="tel:+221777187652" class="text-cream hover:underline">+221 77 718 76 52</a></p>
+            <p>Plateau : <a href="tel:+221786307097" class="text-cream hover:underline">+221 78 630 70 97</a></p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Copyright & Mentions -->
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-sand/50">
+        <p>© 2026 Kōtao Coffee Dakar. Tous droits réservés.</p>
+        <p class="mt-2 sm:mt-0 font-light">Café de Spécialité & Brunch Artisanal · Dakar, Sénégal</p>
+      </div>
+
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script>
+    let mapInstance = null;
+    const markers = {};
+
+    // 1. GESTION DU HEADER STICKY & TRANSITION DE FOND AU SCROLL
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('main-header');
+      if (window.scrollY > 40) {
+        header.classList.add('bg-cream/95', 'backdrop-blur-md', 'shadow-sm', 'py-3.5', 'border-b', 'border-sand');
+        header.classList.remove('py-5');
+      } else {
+        header.classList.remove('bg-cream/95', 'backdrop-blur-md', 'shadow-sm', 'py-3.5', 'border-b', 'border-sand');
+        header.classList.add('py-5');
+      }
+    });
+
+    // 2. GESTION DU MENU MOBILE (BURGER)
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const burgerIcon = document.getElementById('burger-icon');
+
+    mobileToggle.addEventListener('click', () => {
+      const isHidden = mobileMenu.classList.contains('hidden');
+      if (isHidden) {
+        mobileMenu.classList.remove('hidden');
+        burgerIcon.classList.remove('fa-bars-staggered');
+        burgerIcon.classList.add('fa-xmark');
+      } else {
+        mobileMenu.classList.add('hidden');
+        burgerIcon.classList.remove('fa-xmark');
+        burgerIcon.classList.add('fa-bars-staggered');
+      }
+    });
+
+    // Fermer le menu mobile lors d'un clic sur un lien
+    document.querySelectorAll('.mobile-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        burgerIcon.classList.remove('fa-xmark');
+        burgerIcon.classList.add('fa-bars-staggered');
+      });
+    });
+
+    // 3. GESTION DES ONGLETS DE LA CARTE DE SAISON
+    function switchTab(categoryId, buttonElement) {
+      // Retirer la classe active de tous les boutons
+      document.querySelectorAll('.menu-tab').forEach(btn => {
+        btn.classList.remove('nav-tab-active');
+        btn.classList.add('text-ink/70');
+      });
+
+      // Activer le bouton sélectionné
+      buttonElement.classList.add('nav-tab-active');
+      buttonElement.classList.remove('text-ink/70');
+
+      // Masquer tous les conteneurs
+      const categories = ['brunch', 'plats', 'patisserie', 'cafe'];
+      categories.forEach(cat => {
+        const el = document.getElementById(`content-${cat}`);
+        if (el) {
+          el.classList.add('hidden');
+        }
+      });
+
+      // Afficher le conteneur sélectionné
+      const target = document.getElementById(`content-${categoryId}`);
+      if (target) {
+        target.classList.remove('hidden');
+      }
+    }
+
+    // 4. GESTION DE LA LIGHTBOX GALERIE PHOTO
+    function openLightbox(imageUrl, captionText) {
+      const modal = document.getElementById('lightbox-modal');
+      const img = document.getElementById('lightbox-image');
+      const caption = document.getElementById('lightbox-caption');
+
+      img.src = imageUrl;
+      caption.textContent = captionText;
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      const modal = document.getElementById('lightbox-modal');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Fermer en cliquant en dehors de l'image
+    document.getElementById('lightbox-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'lightbox-modal') {
+        closeLightbox();
+      }
+    });
+
+    // Fermer avec la touche Échap
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      }
+    });
+
+    // 5. INITIALISATION DE LA CARTE INTERACTIVE LEAFLET (SANS CLÉ API)
+    function initKotaoMap() {
+      // Coordonnées centrales englobant Dakar (entre Almadies et Plateau)
+      const dakarCenter = [14.71, -17.47];
+      
+      const isSmallScreen = window.innerWidth < 768;
+      mapInstance = L.map('kotao-map', {
+        center: dakarCenter,
+        zoom: 12,
+        scrollWheelZoom: false,
+        dragging: !isSmallScreen,
+        tap: !isSmallScreen
+      });
+
+      // Fond de carte élégant et minimaliste (CartoDB Positron / OpenStreetMap)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(mapInstance);
+
+      // Création de l'icône personnalisée terracotta
+      const createCustomIcon = () => {
+        return L.divIcon({
+          className: 'custom-leaflet-marker',
+          html: `<div class="custom-map-pin"><i class="fa-solid fa-mug-hot"></i></div>`,
+          iconSize: [44, 44],
+          iconAnchor: [22, 44],
+          popupAnchor: [0, -40]
+        });
+      };
+
+      // Spot 1 : Almadies (King Fahd)
+      const almadiesCoords = [14.7438, -17.5165];
+      const almadiesPopupContent = `
+        <div class="text-left" style="min-width: 200px;">
+          <span style="font-size: 10px; text-transform: uppercase; color: #BE6C47; font-weight: 600; letter-spacing: 0.05em;">Les Almadies</span>
+          <h4 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.35rem; font-weight: 600; color: #243B30; margin: 2px 0 6px 0;">Kōtao Almadies</h4>
+          <p style="font-size: 11px; color: #221B16; margin-bottom: 6px; line-height: 1.4;">Route du King Fahd (avant l'American Food Store)</p>
+          <div style="font-size: 11px; color: #182921; font-weight: 500; margin-bottom: 10px;">
+            <i class="fa-solid fa-clock" style="color: #BE6C47; margin-right: 4px;"></i> 07h30 — 22h00 (7j/7)
+          </div>
+          <a href="tel:+221777187652" style="display: block; text-align: center; background: #BE6C47; color: #FAF6F0; padding: 6px 12px; border-radius: 9999px; text-decoration: none; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+            <i class="fa-solid fa-phone" style="font-size: 10px; margin-right: 4px;"></i> Appeler : 77 718 76 52
+          </a>
+        </div>
+      `;
+
+      markers['Kōtao Almadies'] = L.marker(almadiesCoords, { icon: createCustomIcon() })
+        .addTo(mapInstance)
+        .bindPopup(almadiesPopupContent);
+
+      // Spot 2 : Plateau (Rue Jules Ferry)
+      const plateauCoords = [14.6685, -17.4338];
+      const plateauPopupContent = `
+        <div class="text-left" style="min-width: 200px;">
+          <span style="font-size: 10px; text-transform: uppercase; color: #BE6C47; font-weight: 600; letter-spacing: 0.05em;">Dakar Plateau</span>
+          <h4 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.35rem; font-weight: 600; color: #243B30; margin: 2px 0 6px 0;">Kōtao Plateau</h4>
+          <p style="font-size: 11px; color: #221B16; margin-bottom: 6px; line-height: 1.4;">26, rue Jules Ferry (Centre-ville)</p>
+          <div style="font-size: 11px; color: #182921; font-weight: 500; margin-bottom: 10px;">
+            <i class="fa-solid fa-clock" style="color: #BE6C47; margin-right: 4px;"></i> 07h30 — 22h00 (7j/7)
+          </div>
+          <a href="tel:+221786307097" style="display: block; text-align: center; background: #243B30; color: #FAF6F0; padding: 6px 12px; border-radius: 9999px; text-decoration: none; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+            <i class="fa-solid fa-phone" style="font-size: 10px; margin-right: 4px;"></i> Appeler : 78 630 70 97
+          </a>
+        </div>
+      `;
+
+      markers['Kōtao Plateau'] = L.marker(plateauCoords, { icon: createCustomIcon() })
+        .addTo(mapInstance)
+        .bindPopup(plateauPopupContent);
+    }
+
+    // Fonction de recentrage fluide lors du clic sur "Voir sur le plan"
+    function flyToSpot(lat, lng, spotName) {
+      if (!mapInstance) return;
+
+      // Faire défiler doucement l'écran vers le conteneur de la carte
+      const mapContainer = document.getElementById('kotao-map');
+      if (mapContainer) {
+        mapContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // Animation flyTo Leaflet
+      setTimeout(() => {
+        mapInstance.flyTo([lat, lng], 15, {
+          duration: 1.8,
+          easeLinearity: 0.25
+        });
+
+        // Ouvrir le popup du spot sélectionné
+        if (markers[spotName]) {
+          markers[spotName].openPopup();
+        }
+      }, 400);
+    }
+
+    // Initialisation au chargement de la fenêtre
+    window.addEventListener('load', () => {
+      initKotaoMap();
+    });
+  </script>
+
+</body>
+</html>
